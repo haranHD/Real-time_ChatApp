@@ -1,15 +1,12 @@
-# Use official OpenJDK base image
-FROM eclipse-temurin:22-jdk
-
-
-# Set working directory inside the container
+# Stage 1: Build the JAR using Maven with Java 17
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
 
-# Copy JAR file into container
-COPY target/*.jar app-0.0.1-SNAPSHOT.jar
-
-# Expose the port (default Spring Boot port)
+# Stage 2: Run the built JAR
+FROM eclipse-temurin:17-jdk
+WORKDIR /app
+COPY --from=build /app/target/*.jar app-0.0.1-SNAPSHOT.jar
 EXPOSE 8080
-
-# Command to run the application
 ENTRYPOINT ["java", "-jar", "app-0.0.1-SNAPSHOT.jar"]
